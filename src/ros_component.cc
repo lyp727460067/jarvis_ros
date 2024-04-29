@@ -447,7 +447,7 @@ void RosCompont::OnLocalTrackingResultCallback(
   std::vector<transform::Rigid3d> mark_pose;
   std::map<int, std::vector<object::ObjectImageResult>> same_marks;
   cv::Mat image_object(image_result.size(), CV_8UC3, cv::Scalar::all(0));
-  if (!object_result->empty()) {
+  if (object_result!=nullptr&& !object_result->empty()) {
     for (const auto &result : *object_result) {
       same_marks[result.id].push_back(result);
       if (result.coners.empty()) continue;

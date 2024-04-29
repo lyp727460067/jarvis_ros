@@ -171,7 +171,7 @@ class RosbagProscess {
 };
 
 std::unique_ptr<jarvis_ros::RosCompont> ros_compont;
-
+std::mutex gMutex;
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "%s yaml_config_path\n", argv[0]);
@@ -214,13 +214,19 @@ int main(int argc, char *argv[]) {
   //
   rosbagin.initDataProcFunc(
       [&](const sensor::ImuData &imu) {
+        std::lock_guard<std::mutex> lock(gMutex);
         builder_->AddImuData(imu);
+        // LOG(INFO) << "imu " << std::to_string(imu.time) << " "
+        //           << imu.angular_velocity.transpose() << " "
+        //           << imu.linear_acceleration.transpose();
         return 0;
       },
       imu_topic);
 
   rosbagin.initDataProcFunc(
       [&](const sensor::ImageData &data) {
+        std::lock_guard<std::mutex> lock(gMutex);
+        // LOG(INFO) <<"cam "<< std::to_string(data.time);
         builder_->AddImageData(data);
         return 0;
       },
@@ -267,9 +273,8 @@ int main(int argc, char *argv[]) {
       //                             tracking_data.data->pose);
 
       //
-      // ros_compont->OnLocalTrackingResultCallback(tracking_data,
-      // &object_result,
-      //                                            local_to_globle_transform);
+      ros_compont->OnLocalTrackingResultCallback(tracking_data, nullptr,
+                                                 local_to_globle_transform);
 
       ros_compont->PosePub(tracking_data.data->pose, local_to_globle_transform);
     }
